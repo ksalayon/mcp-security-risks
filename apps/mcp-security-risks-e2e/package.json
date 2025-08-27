@@ -1,0 +1,10 @@
+{
+  "name": "@mcp-security-risks/mcp-security-risks-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@mcp-security-risks/mcp-security-risks"
+    ]
+  }
+}

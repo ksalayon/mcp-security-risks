@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/mcp-security-risks-e2e"
+    },
+    {
+      "path": "./apps/mcp-security-risks"
+    }
+  ]
+}
