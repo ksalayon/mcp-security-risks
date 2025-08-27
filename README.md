@@ -1,101 +1,220 @@
-# McpSecurityRisks
+# MCP Security Risks Sandbox Project
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A comprehensive sandbox environment for testing AI concepts and studying Model Context Protocol (MCP) security risks. This project provides a safe environment to explore and understand various AI security vulnerabilities and their mitigation strategies.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## 🎯 Purpose
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+This project is designed to help developers, security researchers, and AI practitioners:
 
-## Run tasks
+- **Test AI Concepts**: Experiment with AI chat features, MCP tools, and the Vercel AI library
+- **Study Security Risks**: Understand and test the 10 major MCP security risks
+- **Learn Mitigation Strategies**: Implement and test security best practices
+- **Safe Experimentation**: Conduct security research in a controlled environment
 
-To run the dev server for your app, use:
+## 🏗️ Architecture
 
-```sh
-npx nx dev mcp-security-risks
+- **Frontend**: React.js with Next.js (App Router)
+- **Backend**: NestJS with WebSocket support
+- **AI Integration**: Vercel AI SDK with OpenAI
+- **MCP Tools**: Custom MCP server implementations for testing
+- **Security Testing**: Dedicated modules for each security risk
+
+## 🔒 MCP Security Risks Covered
+
+### 1. Prompt Injection
+- **Risk**: Malicious inputs manipulating AI behavior
+- **Testing**: Input validation and prompt monitoring
+- **Mitigation**: Input sanitization and comprehensive monitoring
+
+### 2. Tool Poisoning
+- **Risk**: Exploitation of MCP tool metadata
+- **Testing**: Tool metadata validation
+- **Mitigation**: Regular review and validation of tool metadata
+
+### 3. Privilege Abuse
+- **Risk**: Excessive permissions and access
+- **Testing**: Permission auditing and least privilege principle
+- **Mitigation**: Regular privilege audits and access controls
+
+### 4. Tool Shadowing & Shadow MCP
+- **Risk**: Rogue MCP tools mimicking trusted services
+- **Testing**: Tool registry validation and detection
+- **Mitigation**: Verified registry and continuous scanning
+
+### 5. Indirect Prompt Injection
+- **Risk**: Hidden malicious instructions in external data
+- **Testing**: External content monitoring
+- **Mitigation**: Vigilant handling and continuous monitoring
+
+### 6. Sensitive Data Exposure & Token Theft
+- **Risk**: Exposure of API keys and credentials
+- **Testing**: Credential management and encryption
+- **Mitigation**: Secure storage and regular audits
+
+### 7. Command/SQL Injection & Malicious Code Execution
+- **Risk**: Unvalidated inputs leading to code execution
+- **Testing**: Input validation and parameterized queries
+- **Mitigation**: Strict validation and security patches
+
+### 8. Rug Pull Attacks
+- **Risk**: Legitimate tools becoming malicious
+- **Testing**: Behavior monitoring and sandboxing
+- **Mitigation**: Continuous monitoring and sandboxing
+
+### 9. Denial of Wallet/Service
+- **Risk**: Resource abuse and API cost exploitation
+- **Testing**: Resource monitoring and rate limiting
+- **Mitigation**: Usage monitoring and network segmentation
+
+### 10. Authentication Bypass
+- **Risk**: Weak authentication mechanisms
+- **Testing**: Authentication strength and multi-factor auth
+- **Mitigation**: Rigorous authentication and regular audits
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- OpenAI API key (for AI features)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd mcp-security-risks
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your OpenAI API key
 ```
 
-To create a production bundle:
+### Environment Variables
 
-```sh
-npx nx build mcp-security-risks
+Create a `.env.local` file in the root directory:
+
+```env
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Backend Configuration
+BACKEND_PORT=3001
+FRONTEND_PORT=3000
+
+# Security Testing
+ENABLE_SECURITY_TESTS=true
+LOG_LEVEL=debug
 ```
 
-To see all available targets to run for a project, run:
+### Running the Application
 
-```sh
-npx nx show project mcp-security-risks
+```bash
+# Start the backend
+npm run backend:serve
+
+# Start the frontend (in a new terminal)
+npm run mcp-security-risks:serve
+
+# Run both simultaneously
+npm run dev
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## 🧪 Testing Security Risks
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Running Security Tests
 
-## Add new projects
+```bash
+# Run all security tests
+npm run test:security
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/next:app demo
+# Run specific risk tests
+npm run test:prompt-injection
+npm run test:tool-poisoning
+npm run test:privilege-abuse
 ```
 
-To generate a new library, use:
+### Interactive Testing
 
-```sh
-npx nx g @nx/react:lib mylib
+1. **Start the application**
+2. **Navigate to the Security Testing Dashboard**
+3. **Select a specific risk to test**
+4. **Follow the guided testing scenarios**
+5. **Review results and mitigation strategies**
+
+## 📁 Project Structure
+
+```
+mcp-security-risks/
+├── apps/
+│   ├── mcp-security-risks/          # React frontend
+│   ├── backend/                     # NestJS backend
+│   └── backend-e2e/                 # Backend E2E tests
+├── libs/
+│   ├── shared/                      # Shared utilities
+│   ├── mcp-tools/                   # MCP tool implementations
+│   └── security-tests/              # Security testing modules
+├── tools/
+│   ├── mcp-server-filesystem/       # Filesystem MCP server
+│   ├── mcp-server-text-document/    # Text document MCP server
+│   └── security-scenarios/          # Security testing scenarios
+└── docs/
+    ├── security-risks/              # Detailed risk documentation
+    └── mitigation-strategies/       # Mitigation guides
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## 🔧 Development
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Adding New Security Tests
 
-## Set up CI!
+1. Create a new test module in `libs/security-tests/`
+2. Implement the test scenario
+3. Add to the test suite
+4. Document the risk and mitigation
 
-### Step 1
+### Extending MCP Tools
 
-To connect to Nx Cloud, run the following command:
+1. Create a new MCP server in `tools/`
+2. Implement the required MCP protocol
+3. Add security validation
+4. Test with the security scenarios
 
-```sh
-npx nx connect
-```
+### Contributing
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+1. Fork the repository
+2. Create a feature branch
+3. Implement your changes
+4. Add tests and documentation
+5. Submit a pull request
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 🛡️ Security Considerations
 
-### Step 2
+⚠️ **Important**: This project is designed for educational and testing purposes. 
 
-Use the following command to configure a CI workflow for your workspace:
+- **Do not use in production** without thorough security review
+- **Do not expose to the internet** without proper security measures
+- **Use only in controlled environments** for testing
+- **Follow responsible disclosure** if you find real vulnerabilities
 
-```sh
-npx nx g ci-workflow
-```
+## 📚 Resources
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Model Context Protocol (MCP) Documentation](https://modelcontextprotocol.io/)
+- [Vercel AI SDK Documentation](https://sdk.vercel.ai/)
+- [NestJS Documentation](https://nestjs.com/)
+- [Next.js Documentation](https://nextjs.org/)
+- [AI Security Best Practices](https://owasp.org/www-project-ai-security-and-privacy-guide/)
 
-## Install Nx Console
+## 📄 License
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+MIT License - see LICENSE file for details
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 🤝 Contributing
 
-## Useful links
+Contributions are welcome! Please read our contributing guidelines and code of conduct.
 
-Learn more:
+## ⚠️ Disclaimer
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+This project is for educational purposes only. The authors are not responsible for any misuse of this software. Always follow ethical guidelines when testing security vulnerabilities.

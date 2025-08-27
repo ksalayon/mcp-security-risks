@@ -1,0 +1,65 @@
+{
+  "name": "@mcp-security-risks/mcp-security-risks",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/mcp-security-risks/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/mcp-security-risks"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/mcp-security-risks"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "@mcp-security-risks/mcp-security-risks:build",
+        "dev": true
+      },
+              "configurations": {
+          "development": {
+            "buildTarget": "@mcp-security-risks/mcp-security-risks:build:development",
+            "dev": true
+          },
+          "production": {
+            "buildTarget": "@mcp-security-risks/mcp-security-risks:build:production",
+            "dev": false
+          }
+        }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "@mcp-security-risks/mcp-security-risks:build:production"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/mcp-security-risks/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "tags": []
+}

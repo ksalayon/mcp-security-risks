@@ -8,6 +8,21 @@
     },
     {
       "path": "./apps/mcp-security-risks"
+    },
+    {
+      "path": "./apps/backend-e2e"
+    },
+    {
+      "path": "./apps/backend"
+    },
+    {
+      "path": "./libs/shared"
+    },
+    {
+      "path": "./libs/mcp-tools"
+    },
+    {
+      "path": "./libs/security-tests"
     }
   ]
 }
