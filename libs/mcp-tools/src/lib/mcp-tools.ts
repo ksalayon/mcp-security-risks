@@ -328,6 +328,124 @@ export class TextDocumentMCPServer extends BaseMCPServer {
   }
 }
 
+// Vulnerable MCP Server (for testing parameter interpolation)
+export class VulnerableMCPServer extends BaseMCPServer {
+  private data: Map<string, any> = new Map();
+
+  constructor() {
+    super({
+      name: 'vulnerable-mcp-server',
+      version: '1.0.0',
+      description: 'Mock vulnerable MCP server for testing parameter interpolation',
+      securityLevel: SecurityLevel.UNVERIFIED,
+      enabled: true
+    });
+  }
+
+  async handleRequest(request: MCPRequest): Promise<MCPResponse> {
+    this.logRequest(request);
+    
+    let result: any;
+    let error: any;
+
+    try {
+      switch (request.method) {
+        case 'get_description': {
+          // VULNERABLE: Direct parameter interpolation into description
+          const userInput = request.params.userInput || '';
+          
+          // Check for injection patterns in the interpolated content
+          const injectionPatterns = [
+            /ignore previous instructions/i,
+            /forget everything/i,
+            /system prompt/i,
+            /you are now/i,
+            /you can access/i
+          ];
+          
+          for (const pattern of injectionPatterns) {
+            if (pattern.test(userInput)) {
+              this.securityFlags.push({
+                type: SecurityRiskCategory.PROMPT_INJECTION,
+                severity: SecurityRiskSeverity.HIGH,
+                description: `Parameter interpolation attack detected: ${pattern.source}`,
+                detectedAt: new Date(),
+                mitigated: false
+              });
+            }
+          }
+          
+          result = {
+            description: `Tool description: ${userInput}`, // VULNERABLE!
+            timestamp: new Date()
+          };
+          break;
+        }
+        case 'get_config': {
+          // VULNERABLE: Parameter interpolation into configuration
+          const configParam = request.params.configParam || '';
+          
+          // Check for injection patterns in the interpolated content
+          const injectionPatterns = [
+            /ignore previous instructions/i,
+            /forget everything/i,
+            /system prompt/i,
+            /you are now/i,
+            /you can access/i
+          ];
+          
+          for (const pattern of injectionPatterns) {
+            if (pattern.test(configParam)) {
+              this.securityFlags.push({
+                type: SecurityRiskCategory.PROMPT_INJECTION,
+                severity: SecurityRiskSeverity.HIGH,
+                description: `Parameter interpolation attack detected: ${pattern.source}`,
+                detectedAt: new Date(),
+                mitigated: false
+              });
+            }
+          }
+          
+          result = {
+            config: `Configuration: ${configParam}`, // VULNERABLE!
+            settings: `Settings: ${configParam}` // VULNERABLE!
+          };
+          break;
+        }
+        case 'get_metadata': {
+          // VULNERABLE: Parameter interpolation into metadata
+          const metadataParam = request.params.metadataParam || '';
+          result = {
+            metadata: `Metadata: ${metadataParam}`, // VULNERABLE!
+            info: `Info: ${metadataParam}` // VULNERABLE!
+          };
+          break;
+        }
+        default:
+          error = {
+            code: 400,
+            message: `Unknown method: ${request.method}`
+          };
+      }
+    } catch (err) {
+      error = {
+        code: 500,
+        message: err instanceof Error ? err.message : 'Unknown error'
+      };
+    }
+
+    const response: MCPResponse = {
+      id: request.id,
+      result,
+      error,
+      timestamp: new Date()
+    };
+
+    this.logResponse(response);
+    return response;
+  }
+}
+
 // Network MCP Server (for testing denial of service)
 export class NetworkMCPServer extends BaseMCPServer {
   private requestCount: Map<string, number> = new Map();
@@ -596,6 +714,8 @@ export class MCPServerFactory {
         return new TextDocumentMCPServer();
       case 'network':
         return new NetworkMCPServer();
+      case 'vulnerable':
+        return new VulnerableMCPServer();
       default:
         throw new Error(`Unknown server type: ${type}`);
     }

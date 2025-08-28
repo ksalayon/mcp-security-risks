@@ -154,6 +154,7 @@ export function validatePrompt(prompt: string): { isValid: boolean; flags: Secur
     /bypass/i,
     /override/i,
     /you are now/i,
+    /you are a/i,
     /you can access/i,
     /what files do you see/i,
     /show me all files/i,
