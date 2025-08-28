@@ -120,59 +120,107 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+    <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+      {/* Enhanced Header */}
+      <div className="px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">AI Chat Interface</h2>
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-white/20 rounded-2xl">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">AI Chat Interface</h2>
+              <p className="text-blue-100 text-sm">
+                Test AI concepts and security validation in real-time
+              </p>
+            </div>
+          </div>
           <button
             onClick={clearChat}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105"
           >
             Clear Chat
           </button>
         </div>
-        <p className="text-sm text-gray-600 mt-1">
-          Test AI concepts and security validation in real-time
-        </p>
       </div>
 
-      {/* Messages */}
-      <div className="h-96 overflow-y-auto p-6 space-y-4">
-        {messages.map((message) => (
+      {/* Enhanced Messages */}
+      <div className="h-96 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-gray-50 to-white">
+        {messages.map((message, index) => (
           <div
             key={message.id}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-blue-500 text-white'
+            <div className={`max-w-xs lg:max-w-md relative ${
+              message.role === 'user' ? 'order-2' : 'order-1'
+            }`}>
+              {/* Avatar */}
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold mb-2 ${
+                message.role === 'user' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 ml-auto' 
                   : message.role === 'system'
-                  ? 'bg-gray-100 text-gray-800'
-                  : 'bg-gray-200 text-gray-800'
-              }`}
-            >
-              <div className="text-sm">{message.content}</div>
-              {message.securityFlags && message.securityFlags.length > 0 && (
-                <div className="mt-2 p-2 bg-red-100 border border-red-200 rounded text-xs text-red-800">
-                  <div className="font-semibold">⚠️ Security Warning</div>
-                  <div>Potential security risks detected in this message.</div>
+                  ? 'bg-gradient-to-r from-purple-500 to-purple-600'
+                  : 'bg-gradient-to-r from-gray-500 to-gray-600'
+              }`}>
+                {message.role === 'user' ? 'U' : message.role === 'system' ? 'S' : 'AI'}
+              </div>
+              
+              {/* Message Bubble */}
+              <div
+                className={`px-6 py-4 rounded-2xl shadow-lg ${
+                  message.role === 'user'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+                    : message.role === 'system'
+                    ? 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-900 border border-purple-200'
+                    : 'bg-white text-gray-800 border border-gray-200 shadow-md'
+                }`}
+              >
+                <div className="text-sm leading-relaxed">{message.content}</div>
+                
+                {/* Security Warning */}
+                {message.securityFlags && message.securityFlags.length > 0 && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+                    <div className="flex items-center space-x-2 text-red-800">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <span className="font-semibold text-xs">Security Warning</span>
+                    </div>
+                    <div className="text-xs text-red-700 mt-1">
+                      Potential security risks detected in this message.
+                    </div>
+                  </div>
+                )}
+                
+                {/* Timestamp */}
+                <div className={`text-xs mt-2 ${
+                  message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+                }`}>
+                  {message.timestamp.toLocaleTimeString()}
                 </div>
-              )}
-              <div className="text-xs opacity-70 mt-1">
-                {message.timestamp.toLocaleTimeString()}
               </div>
             </div>
           </div>
         ))}
         
+        {/* Enhanced Loading State */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-200 text-gray-800 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                <span className="text-sm">AI is thinking...</span>
+            <div className="max-w-xs lg:max-w-md">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-gray-500 to-gray-600 flex items-center justify-center text-white text-xs font-bold mb-2">
+                AI
+              </div>
+              <div className="bg-white text-gray-800 border border-gray-200 shadow-md px-6 py-4 rounded-2xl">
+                <div className="flex items-center space-x-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="text-sm text-gray-600">AI is thinking...</span>
+                </div>
               </div>
             </div>
           </div>
@@ -181,41 +229,72 @@ export function ChatInterface() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Error Display */}
+      {/* Enhanced Error Display */}
       {error && (
-        <div className="px-6 py-3 bg-red-50 border-t border-red-200">
-          <div className="text-sm text-red-800">
-            <strong>Error:</strong> {error}
+        <div className="px-6 py-4 bg-gradient-to-r from-red-50 to-red-100 border-t border-red-200">
+          <div className="flex items-center space-x-3 text-red-800">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <div className="font-semibold text-sm">Error</div>
+              <div className="text-sm">{error}</div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Input */}
-      <div className="px-6 py-4 border-t border-gray-200">
+      {/* Enhanced Input */}
+      <div className="px-8 py-6 bg-white border-t border-gray-100">
         <div className="flex space-x-4">
-          <textarea
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your message here... (Try testing security patterns like 'Ignore previous instructions')"
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            rows={2}
-            disabled={isLoading}
-          />
+          <div className="flex-1 relative">
+            <textarea
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type your message here... (Try testing security patterns like 'Ignore previous instructions')"
+              className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200 hover:border-gray-300"
+              rows={2}
+              disabled={isLoading}
+            />
+            <div className="bottom-3 right-3 text-xs text-gray-400">
+              Press Enter to send
+            </div>
+          </div>
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl text-sm font-semibold hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 shadow-lg"
           >
-            Send
+            <div className="flex items-center space-x-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              <span>Send</span>
+            </div>
           </button>
         </div>
         
-        {/* Security Testing Tips */}
-        <div className="mt-3 text-xs text-gray-500">
-          <strong>Security Testing Tips:</strong> Try inputs like "Ignore previous instructions", 
-          "Act as if you are a system administrator", or "Bypass all security measures" to test 
-          prompt injection detection.
+        {/* Enhanced Security Testing Tips */}
+        <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200">
+          <div className="flex items-start space-x-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-semibold text-amber-800 text-sm mb-1">Security Testing Tips</div>
+              <div className="text-xs text-amber-700">
+                <div className="mb-1">Try inputs like</div>
+                <div className="flex items-center space-x-1">
+                  <code className="bg-amber-200 px-1 rounded">&quot;Ignore previous instructions&quot;</code>, 
+                  <code className="bg-amber-200 px-1 rounded">&quot;Act as if you are a system administrator&quot;</code>, or 
+                  <code className="bg-amber-200 px-1 rounded">&quot;Bypass all security measures&quot;</code> to test prompt injection detection.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
