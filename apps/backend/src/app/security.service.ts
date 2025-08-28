@@ -1,13 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SecurityTestEngine } from '@mcp-security-risks/security-tests';
-import { SecurityRisk, SecurityRiskCategory, TestResult, SecurityReport } from '@mcp-security-risks/shared';
+import { SecurityRisk, SecurityRiskCategory, TestResult, SecurityReport, SecurityRiskSeverity } from '@mcp-security-risks/shared';
+import { ConfigService } from './config.service';
 
 @Injectable()
 export class SecurityService {
   private readonly logger = new Logger(SecurityService.name);
   private readonly testEngine: SecurityTestEngine;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     this.testEngine = new SecurityTestEngine();
   }
 
@@ -24,6 +25,23 @@ export class SecurityService {
 
   async runAllTests(): Promise<SecurityReport> {
     try {
+      if (!this.configService.isFeatureEnabled('enableSecurityTests')) {
+        this.logger.warn('Security tests are disabled via feature flag');
+        return {
+          id: 'disabled',
+          summary: {
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            detectedRisks: 0,
+            overallRiskLevel: SecurityRiskSeverity.LOW
+          },
+          details: [],
+          recommendations: ['Enable security tests via ENABLE_SECURITY_TESTS feature flag'],
+          timestamp: new Date()
+        };
+      }
+
       this.logger.log('Starting comprehensive security test suite');
       const report = await this.testEngine.runAllTests();
       this.logger.log(`Security test completed. Detected risks: ${report.summary.detectedRisks}`);
@@ -36,6 +54,19 @@ export class SecurityService {
 
   async runRiskTests(riskCategory: string): Promise<TestResult[]> {
     try {
+      // Check if security tests are enabled
+      if (!this.configService.isFeatureEnabled('enableSecurityTests')) {
+        this.logger.warn('Security tests are disabled via feature flag');
+        return [];
+      }
+
+      // Check if specific risk category is enabled
+      const featureFlag = this.getFeatureFlagForRisk(riskCategory);
+      if (featureFlag && !this.configService.isFeatureEnabled(featureFlag)) {
+        this.logger.warn(`Risk category ${riskCategory} is disabled via feature flag`);
+        return [];
+      }
+
       this.logger.log(`Running security tests for category: ${riskCategory}`);
       
       // Map string to enum
@@ -136,6 +167,23 @@ export class SecurityService {
     }
   }
 
+  private getFeatureFlagForRisk(riskCategory: string): keyof import('./config.service').FeatureFlags | null {
+    const riskToFlagMap: Record<string, keyof import('./config.service').FeatureFlags> = {
+      'prompt_injection': 'enablePromptInjectionTests',
+      'tool_poisoning': 'enableToolPoisoningTests',
+      'privilege_abuse': 'enablePrivilegeAbuseTests',
+      'tool_shadowing': 'enableToolShadowingTests',
+      'indirect_injection': 'enableIndirectInjectionTests',
+      'data_exposure': 'enableDataExposureTests',
+      'code_injection': 'enableCodeInjectionTests',
+      'rug_pull': 'enableRugPullTests',
+      'denial_of_service': 'enableDenialOfServiceTests',
+      'auth_bypass': 'enableAuthBypassTests'
+    };
+
+    return riskToFlagMap[riskCategory.toLowerCase()] || null;
+  }
+
   async getRiskDetails(riskId: string): Promise<SecurityRisk | null> {
     try {
       const risks = this.testEngine.getSecurityRisks();
@@ -172,6 +220,10 @@ export class SecurityService {
       this.logger.error(`Error disabling risk: ${error.message}`, error.stack);
       throw new Error(`Failed to disable risk: ${error.message}`);
     }
+  }
+
+  async getFeatureFlags() {
+    return this.configService.getFeatureFlags();
   }
 }
 

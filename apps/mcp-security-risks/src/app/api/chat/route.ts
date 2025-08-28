@@ -6,7 +6,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const response = await fetch(`${BACKEND_URL}/api/chat`, {
+    // Check if this is a raw attack test
+    const isRawAttack = body.rawAttack === true;
+    const endpoint = isRawAttack ? '/api/chat/raw-attack' : '/api/chat';
+    
+    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

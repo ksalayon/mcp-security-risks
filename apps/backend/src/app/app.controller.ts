@@ -44,17 +44,22 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Post('api/chat')
+  @Post('chat')
   async chat(@Body() request: ChatRequest): Promise<ChatResponse> {
     return await this.chatService.processChat(request);
   }
 
-  @Get('api/security/risks')
+  @Post('chat/raw-attack')
+  async chatRawAttack(@Body() request: ChatRequest): Promise<ChatResponse> {
+    return await this.chatService.processChatWithRawAttacks(request);
+  }
+
+  @Get('security/risks')
   async getSecurityRisks() {
     return await this.securityService.getSecurityRisks();
   }
 
-  @Post('api/security/test')
+  @Post('security/test')
   async runSecurityTest(@Body() request: SecurityTestRequest) {
     if (request.runAll) {
       return await this.securityService.runAllTests();
@@ -65,12 +70,12 @@ export class AppController {
     }
   }
 
-  @Get('api/security/status')
+  @Get('security/status')
   async getSecurityStatus() {
     return await this.securityService.getSecurityStatus();
   }
 
-  @Get('api/health')
+  @Get('health')
   async healthCheck() {
     return {
       status: 'healthy',
@@ -81,5 +86,10 @@ export class AppController {
         mcp: 'operational'
       }
     };
+  }
+
+  @Get('config/feature-flags')
+  async getFeatureFlags() {
+    return this.securityService.getFeatureFlags();
   }
 }

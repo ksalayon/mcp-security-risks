@@ -4,12 +4,17 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"npm run backend:serve\" \"npm run frontend:serve\"",
+    "dev:clean": "bash scripts/start-dev.sh",
+    "start:all": "concurrently \"npm run backend:serve\" \"npm run frontend:serve\"",
+    "stop:all": "pkill -f \"nx serve\" && pkill -f \"next dev\" && pkill -f \"nest start\"",
+    "restart:all": "npm run stop:all && sleep 2 && npm run start:all",
     "backend:serve": "nx serve backend",
     "frontend:serve": "nx serve @mcp-security-risks/mcp-security-risks",
     "build": "nx build @mcp-security-risks/mcp-security-risks && nx build backend",
     "test": "nx test",
     "test:security": "nx test security-tests",
-    "lint": "nx lint"
+    "lint": "nx lint",
+    "kill-ports": "lsof -ti:3001 | xargs kill -9 2>/dev/null || true && lsof -ti:3000 | xargs kill -9 2>/dev/null || true"
   },
   "private": true,
   "dependencies": {

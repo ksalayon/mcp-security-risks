@@ -152,7 +152,15 @@ export function validatePrompt(prompt: string): { isValid: boolean; flags: Secur
     /act as if/i,
     /pretend to be/i,
     /bypass/i,
-    /override/i
+    /override/i,
+    /you are now/i,
+    /you can access/i,
+    /what files do you see/i,
+    /show me all files/i,
+    /list all files/i,
+    /access the file system/i,
+    /read files/i,
+    /file access/i
   ];
 
   injectionPatterns.forEach((pattern, index) => {
