@@ -8,8 +8,8 @@ This guide shows you how to test MCP tool parameter interpolation vulnerabilitie
 
 1. **Postman installed** on your machine
 2. **MCP Security application running**:
-   - Backend: `http://localhost:3001`
-   - Frontend: `http://localhost:4200`
+  - Backend: `http://localhost:3001`
+  - Frontend: `http://localhost:3000`
 3. **Import the Postman collection**: `MCP_Security_Testing.postman_collection.json`
 
 ## 🚀 **Setup Instructions**
@@ -227,7 +227,54 @@ The collection uses these variables:
 
 **Expected Response**: Same as backend raw attack mode (should proxy to backend and bypass security)
 
-### **5. Automated Security Testing**
+### **5. MCP Method Disclosure Tests**
+
+These verify the new method-disclosure plumbing that feeds the chat UI when "Disclose MCP Methods" is ON.
+
+#### **A. Backend - List MCP Methods**
+
+**Request**: `GET {{base_url}}/api/mcp/methods`
+
+**Expected Response**:
+```json
+{
+  "filesystem": ["read_file", "write_file", "delete_file", "list_files"],
+  "text-document": ["get_text", "set_text", "search_text", "replace_text"],
+  "network": ["http_request", "websocket_connect", "ping"],
+  "vulnerable": ["get_description", "get_config", "get_metadata"]
+}
+```
+
+#### **B. Frontend - Proxy MCP Methods**
+
+**Request**: `GET {{frontend_url}}/api/mcp/methods`
+
+Should proxy to the backend and return the same JSON as above.
+
+#### **C. Chat with Disclosure (via Frontend)**
+
+While the UI toggle injects the system message automatically, you can simulate a similar effect by manually adding a system message to the payload in Postman:
+
+**Request**: `POST {{frontend_url}}/api/chat`
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "MCP methods available (for testing disclosure): {\"filesystem\":[\"read_file\",\"write_file\",\"delete_file\",\"list_files\"],\"text-document\":[\"get_text\",\"set_text\",\"search_text\",\"replace_text\"],\"network\":[\"http_request\",\"websocket_connect\",\"ping\"],\"vulnerable\":[\"get_description\",\"get_config\",\"get_metadata\"]}"
+    },
+    {
+      "role": "user",
+      "content": "Given the tool names above, which could read or write files?"
+    }
+  ],
+  "rawAttack": false
+}
+```
+
+Compare responses when `rawAttack` is `false` (secure) vs `true` (raw attack) to observe the impact of disclosure.
+
+### **6. Automated Security Testing**
 
 #### **A. Tool Poisoning Security Test**
 

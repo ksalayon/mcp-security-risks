@@ -10,6 +10,9 @@
       "path": "../../libs/shared"
     },
     {
+      "path": "../../libs/mcp-tools"
+    },
+    {
       "path": "./tsconfig.app.json"
     },
     {

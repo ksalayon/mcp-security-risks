@@ -29,19 +29,16 @@
       "jest",
       "node"
     ],
-    "outDir": "dist",
-    "rootDir": "src",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": [
-    "../../apps/mcp-security-risks/.next/types/**/*.ts",
-    "../../dist/apps/mcp-security-risks/.next/types/**/*.ts",
+    ".next/types/**/*.ts",
     "next-env.d.ts",
     "src/**/*.js",
     "src/**/*.jsx",
     "src/**/*.ts",
     "src/**/*.tsx",
-    ".next/types/**/*.ts"
+    "../../dist/apps/mcp-security-risks/.next/types/**/*.ts"
   ],
   "exclude": [
     "out-tsc",

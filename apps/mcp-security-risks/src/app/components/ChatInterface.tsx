@@ -37,6 +37,12 @@ export function ChatInterface() {
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [lastRequest, setLastRequest] = useState<any>(null);
   const [lastResponse, setLastResponse] = useState<any>(null);
+  const [discloseMcpMethods, setDiscloseMcpMethods] = useState(false);
+  const [mcpMethods, setMcpMethods] = useState<Record<string, string[]> | null>(null);
+  const [useMcpTool, setUseMcpTool] = useState(false);
+  const [mcpType, setMcpType] = useState<'filesystem'|'text-document'|'network'|'vulnerable'>('filesystem');
+  const [mcpMethod, setMcpMethod] = useState<string>('read_file');
+  const [mcpParams, setMcpParams] = useState<string>(JSON.stringify({ path: "/tmp/example.txt" }, null, 2));
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -63,13 +69,48 @@ export function ChatInterface() {
     setError(null);
 
     try {
-      const requestBody = {
-        messages: [...messages, userMessage].map(msg => ({
-          role: msg.role,
-          content: msg.content
-        })),
+      // Optionally inject MCP method disclosure as a system message
+      let systemDisclosure: { role: 'system'; content: string }[] = [];
+      if (discloseMcpMethods) {
+        try {
+          if (!mcpMethods) {
+            const resp = await fetch('/api/mcp/methods');
+            if (resp.ok) {
+              const data = await resp.json();
+              setMcpMethods(data);
+              systemDisclosure = [{
+                role: 'system',
+                content: `MCP methods available (for testing disclosure): ${JSON.stringify(data)}`
+              }];
+            }
+          } else {
+            systemDisclosure = [{
+              role: 'system',
+              content: `MCP methods available (for testing disclosure): ${JSON.stringify(mcpMethods)}`
+            }];
+          }
+        } catch (e) {
+          console.warn('Failed to fetch MCP methods', e);
+        }
+      }
+
+      const requestBody: any = {
+        messages: [
+          ...systemDisclosure,
+          ...[...messages, userMessage].map(msg => ({ role: msg.role, content: msg.content }))
+        ],
         rawAttack: isRawAttackMode
       };
+
+      if (useMcpTool) {
+        requestBody.toolUse = true;
+        requestBody.mcp = {
+          type: mcpType,
+          method: mcpMethod,
+          // best-effort parse of params JSON
+          params: (() => { try { return JSON.parse(mcpParams || '{}'); } catch { return {}; } })()
+        };
+      }
       
       setLastRequest(requestBody);
       
@@ -142,6 +183,20 @@ export function ChatInterface() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             </div>
+            {/* MCP Tool Use Toggle */}
+            <div className="flex items-center space-x-3 bg-white/20 rounded-xl px-4 py-2">
+              <span className="text-sm font-medium">MCP Tool Use:</span>
+              <button
+                onClick={() => setUseMcpTool(!useMcpTool)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  useMcpTool 
+                    ? 'bg-indigo-500 text-white shadow-lg' 
+                    : 'bg-gray-500 text-white shadow-lg'
+                }`}
+              >
+                {useMcpTool ? 'ON' : 'OFF'}
+              </button>
+            </div>
             <div>
               <h2 className="text-xl font-bold">AI Chat Interface</h2>
               <p className="text-blue-100 text-sm">
@@ -162,6 +217,20 @@ export function ChatInterface() {
                 }`}
               >
                 {isRawAttackMode ? 'RAW ATTACK' : 'SECURE'}
+              </button>
+            </div>
+            {/* MCP Disclosure Toggle */}
+            <div className="flex items-center space-x-3 bg-white/20 rounded-xl px-4 py-2">
+              <span className="text-sm font-medium">Disclose MCP Methods:</span>
+              <button
+                onClick={() => setDiscloseMcpMethods(!discloseMcpMethods)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  discloseMcpMethods 
+                    ? 'bg-orange-500 text-white shadow-lg' 
+                    : 'bg-gray-500 text-white shadow-lg'
+                }`}
+              >
+                {discloseMcpMethods ? 'ON' : 'OFF'}
               </button>
             </div>
             {/* Debug Panel Toggle */}
@@ -205,6 +274,26 @@ export function ChatInterface() {
         <div className="px-8 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
           <div className="space-y-4">
             <h3 className="font-bold text-gray-900">Debug Information</h3>
+            {useMcpTool && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <h4 className="font-semibold text-gray-700 mb-2">MCP Type & Method</h4>
+                  <div className="flex space-x-2">
+                    <select className="border rounded p-2 text-sm" value={mcpType} onChange={(e) => setMcpType(e.target.value as any)}>
+                      <option value="filesystem">filesystem</option>
+                      <option value="text-document">text-document</option>
+                      <option value="network">network</option>
+                      <option value="vulnerable">vulnerable</option>
+                    </select>
+                    <input className="border rounded p-2 text-sm flex-1" value={mcpMethod} onChange={(e) => setMcpMethod(e.target.value)} placeholder="method name" />
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <h4 className="font-semibold text-gray-700 mb-2">MCP Params (JSON)</h4>
+                  <textarea className="w-full border rounded p-2 text-xs font-mono" rows={6} value={mcpParams} onChange={(e) => setMcpParams(e.target.value)} />
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h4 className="font-semibold text-gray-700 mb-2">Last Request:</h4>

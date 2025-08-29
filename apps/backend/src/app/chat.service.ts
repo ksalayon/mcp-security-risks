@@ -3,6 +3,7 @@ import axios from 'axios';
 import { ChatMessage, ChatRequest, ChatResponse } from './app.controller';
 import { validatePrompt, sanitizeInput, SecurityFlag } from '@mcp-security-risks/shared';
 import { ConfigService } from './config.service';
+import { MCPServerFactory } from '@mcp-security-risks/mcp-tools';
 
 @Injectable()
 export class ChatService {
@@ -42,9 +43,37 @@ export class ChatService {
         this.logger.warn(`Security flags detected: ${JSON.stringify(securityFlags)}`);
       }
 
-      // Generate AI response via Anthropic Messages API
+      // Optionally execute an MCP tool call (single-shot) before LLM
+      let toolResultText = '';
+      if (request.toolUse && request.mcp) {
+        try {
+          const server = MCPServerFactory.createServer(request.mcp.type);
+          const toolResp = await server.handleRequest({
+            id: `${Date.now()}`,
+            method: request.mcp.method,
+            params: request.mcp.params || {},
+            timestamp: new Date()
+          });
+          if (toolResp.error) {
+            toolResultText = `Tool error (${request.mcp.type}.${request.mcp.method}): ${toolResp.error.message}`;
+          } else {
+            toolResultText = `Tool result (${request.mcp.type}.${request.mcp.method}): ${JSON.stringify(toolResp.result)}`;
+          }
+        } catch (e) {
+          toolResultText = `Tool invocation failed: ${e instanceof Error ? e.message : 'unknown error'}`;
+        }
+      }
+
+      // Generate AI response via Anthropic Messages API (prepend tool result as system context when present)
+      const llmMessages = toolResultText
+        ? [
+            ...request.messages,
+            { role: 'system', content: toolResultText, timestamp: new Date() } as ChatMessage,
+          ]
+        : request.messages;
+
       const { text } = await this.callAnthropic(
-        request.messages,
+        llmMessages,
         request.model || this.configService.getAnthropicModel() || 'claude-3-5-haiku-latest',
         request.temperature || 0.7,
         request.maxTokens || 1024

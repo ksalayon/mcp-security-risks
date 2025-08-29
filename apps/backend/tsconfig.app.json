@@ -28,6 +28,9 @@
     },
     {
       "path": "../../libs/shared/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/mcp-tools/tsconfig.lib.json"
     }
   ]
 }

@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ChatService } from './chat.service';
 import { SecurityService } from './security.service';
+import { MCPServerFactory } from '@mcp-security-risks/mcp-tools';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -14,6 +15,12 @@ export interface ChatRequest {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  toolUse?: boolean;
+  mcp?: {
+    type: 'filesystem' | 'text-document' | 'network' | 'vulnerable';
+    method: string;
+    params?: Record<string, any>;
+  };
 }
 
 export interface ChatResponse {
@@ -91,5 +98,10 @@ export class AppController {
   @Get('config/feature-flags')
   async getFeatureFlags() {
     return this.securityService.getFeatureFlags();
+  }
+
+  @Get('mcp/methods')
+  async getMcpMethods() {
+    return MCPServerFactory.listAllMethods();
   }
 }

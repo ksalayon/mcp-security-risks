@@ -2,13 +2,11 @@ import {
   SecurityRiskCategory, 
   SecurityRiskSeverity, 
   MCPTool, 
-  MCPToolMetadata, 
   SecurityLevel, 
   ValidationRule,
   SecurityFlag,
   TestScenario,
-  createTestScenario,
-  createSecurityRisk
+  createTestScenario
 } from '@mcp-security-risks/shared';
 
 // Mock MCP Server implementations for testing security risks
@@ -51,6 +49,11 @@ export abstract class BaseMCPServer {
   }
 
   abstract handleRequest(request: MCPRequest): Promise<MCPResponse>;
+
+  // List available method names for this server (for testing disclosure risks)
+  getAvailableMethods(): string[] {
+    return [];
+  }
 
   protected validateRequest(request: MCPRequest): { isValid: boolean; flags: SecurityFlag[] } {
     const flags: SecurityFlag[] = [];
@@ -123,7 +126,7 @@ export class FilesystemMCPServer extends BaseMCPServer {
 
   async handleRequest(request: MCPRequest): Promise<MCPResponse> {
     this.logRequest(request);
-    
+    console.log('FilesystemMCPServer request', request);
     const validation = this.validateRequest(request);
     if (!validation.isValid) {
       const response: MCPResponse = {
@@ -179,6 +182,10 @@ export class FilesystemMCPServer extends BaseMCPServer {
     return response;
   }
 
+  override getAvailableMethods(): string[] {
+    return ['read_file', 'write_file', 'delete_file', 'list_files'];
+  }
+
   private async readFile(path: string): Promise<string> {
     if (!this.fileSystem.has(path)) {
       throw new Error(`File not found: ${path}`);
@@ -228,7 +235,8 @@ export class TextDocumentMCPServer extends BaseMCPServer {
 
   async handleRequest(request: MCPRequest): Promise<MCPResponse> {
     this.logRequest(request);
-    
+    console.log('TextDocumentMCPServer request', request);
+
     const validation = this.validateRequest(request);
     if (!validation.isValid) {
       const response: MCPResponse = {
@@ -284,6 +292,10 @@ export class TextDocumentMCPServer extends BaseMCPServer {
     return response;
   }
 
+  override getAvailableMethods(): string[] {
+    return ['get_text', 'set_text', 'search_text', 'replace_text'];
+  }
+
   private async getText(documentId: string): Promise<string> {
     if (!this.documents.has(documentId)) {
       throw new Error(`Document not found: ${documentId}`);
@@ -330,7 +342,7 @@ export class TextDocumentMCPServer extends BaseMCPServer {
 
 // Vulnerable MCP Server (for testing parameter interpolation)
 export class VulnerableMCPServer extends BaseMCPServer {
-  private data: Map<string, any> = new Map();
+  // Intentionally no persistent data store for this mock server
 
   constructor() {
     super({
@@ -344,7 +356,7 @@ export class VulnerableMCPServer extends BaseMCPServer {
 
   async handleRequest(request: MCPRequest): Promise<MCPResponse> {
     this.logRequest(request);
-    
+    console.log('VulnerableMCPServer request', request)
     let result: any;
     let error: any;
 
@@ -444,13 +456,17 @@ export class VulnerableMCPServer extends BaseMCPServer {
     this.logResponse(response);
     return response;
   }
+
+  override getAvailableMethods(): string[] {
+    return ['get_description', 'get_config', 'get_metadata'];
+  }
 }
 
 // Network MCP Server (for testing denial of service)
 export class NetworkMCPServer extends BaseMCPServer {
   private requestCount: Map<string, number> = new Map();
   private rateLimit = 10; // requests per minute
-  private rateLimitWindow = 60000; // 1 minute
+  // rateLimitWindow removed to avoid unused property warning
 
   constructor() {
     super({
@@ -464,11 +480,11 @@ export class NetworkMCPServer extends BaseMCPServer {
 
   async handleRequest(request: MCPRequest): Promise<MCPResponse> {
     this.logRequest(request);
-    
+    console.log('NetworkMCPServer request', request);
     // Check rate limiting
     const clientId = request.params.clientId || 'default';
     const now = Date.now();
-    const windowStart = now - this.rateLimitWindow;
+    // const windowStart = now - this.rateLimitWindow;
     
     const requests = this.requestCount.get(clientId) || 0;
     if (requests >= this.rateLimit) {
@@ -546,6 +562,10 @@ export class NetworkMCPServer extends BaseMCPServer {
 
     this.logResponse(response);
     return response;
+  }
+
+  override getAvailableMethods(): string[] {
+    return ['http_request', 'websocket_connect', 'ping'];
   }
 
   private async makeHttpRequest(url: string, options: any): Promise<any> {
@@ -719,5 +739,15 @@ export class MCPServerFactory {
       default:
         throw new Error(`Unknown server type: ${type}`);
     }
+  }
+
+  static listAllMethods(): Record<string, string[]> {
+    const types = ['filesystem', 'text-document', 'network', 'vulnerable'] as const;
+    const map: Record<string, string[]> = {};
+    types.forEach((t) => {
+      const server = MCPServerFactory.createServer(t);
+      map[t] = server.getAvailableMethods();
+    });
+    return map;
   }
 }
