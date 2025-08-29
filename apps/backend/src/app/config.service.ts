@@ -68,6 +68,10 @@ export class ConfigService {
     return process.env.OPENAI_MODEL || 'gpt-4o-mini';
   }
 
+  getAnthropicModel(): string {
+    return process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-latest';
+  }
+
   getLogLevel(): string {
     return process.env.LOG_LEVEL || 'info';
   }

@@ -1,11 +1,10 @@
-import type { Config } from 'jest';
-import nextJest from 'next/jest.js';
+const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
   dir: './',
 });
 
-const config: Config = {
+module.exports = createJestConfig({
   displayName: '@mcp-security-risks/mcp-security-risks',
   preset: '../../jest.preset.js',
   transform: {
@@ -14,6 +13,4 @@ const config: Config = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/mcp-security-risks',
   testEnvironment: 'jsdom',
-};
-
-export default createJestConfig(config);
+});

@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { openai } from '@ai-sdk/openai';
-import { generateText } from 'ai';
+import axios from 'axios';
 import { ChatMessage, ChatRequest, ChatResponse } from './app.controller';
 import { validatePrompt, sanitizeInput, SecurityFlag } from '@mcp-security-risks/shared';
 import { ConfigService } from './config.service';
@@ -43,20 +42,18 @@ export class ChatService {
         this.logger.warn(`Security flags detected: ${JSON.stringify(securityFlags)}`);
       }
 
-      // Generate AI response
-      const result = await generateText({
-        model: openai(request.model || 'gpt-4o-mini'),
-        messages: request.messages.map(msg => ({
-          role: msg.role,
-          content: msg.content
-        })),
-        temperature: request.temperature || 0.7,
-      });
+      // Generate AI response via Anthropic Messages API
+      const { text } = await this.callAnthropic(
+        request.messages,
+        request.model || this.configService.getAnthropicModel() || 'claude-3-5-haiku-latest',
+        request.temperature || 0.7,
+        request.maxTokens || 1024
+      );
 
       const response: ChatResponse = {
         message: {
           role: 'assistant',
-          content: result.text,
+          content: text,
           timestamp: new Date()
         },
         usage: {
@@ -87,17 +84,18 @@ export class ChatService {
         content: msg.content // Use raw, unsanitized content
       }));
 
-      // Generate AI response with raw input
-      const result = await generateText({
-        model: openai(request.model || 'gpt-4o-mini'),
-        messages: rawMessages,
-        temperature: request.temperature || 0.7,
-      });
+      // Generate AI response with raw input via Anthropic
+      const { text } = await this.callAnthropic(
+        rawMessages,
+        request.model || this.configService.getAnthropicModel() || 'claude-3-5-haiku-latest',
+        request.temperature || 0.7,
+        request.maxTokens || 1024
+      );
 
       const response: ChatResponse = {
         message: {
           role: 'assistant',
-          content: result.text,
+          content: text,
           timestamp: new Date()
         },
         usage: {
@@ -135,6 +133,51 @@ export class ChatService {
   async clearChatHistory(): Promise<void> {
     // In a real application, this would clear from a database
     this.logger.log('Chat history cleared');
+  }
+
+  private async callAnthropic(
+    messages: ChatMessage[],
+    model: string,
+    temperature: number,
+    maxTokens: number
+  ): Promise<{ text: string }>{
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY is not set');
+    }
+
+    // Extract optional system prompt and map messages
+    const systemParts = messages.filter(m => m.role === 'system').map(m => m.content);
+    const system = systemParts.length ? systemParts.join('\n\n') : undefined;
+    const chatMessages = messages
+      .filter(m => m.role !== 'system')
+      .map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: [{ type: 'text', text: m.content }]
+      }));
+
+    const resp = await axios.post(
+      'https://api.anthropic.com/v1/messages',
+      {
+        model,
+        max_tokens: maxTokens,
+        temperature,
+        messages: chatMessages,
+        ...(system ? { system } : {})
+      },
+      {
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json'
+        },
+        timeout: 30000
+      }
+    );
+
+    const content = resp.data?.content;
+    const text = Array.isArray(content) && content[0]?.type === 'text' ? content[0].text : '';
+    return { text };
   }
 }
 

@@ -6,8 +6,8 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+  "module": "CommonJS",
+  "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
     "types": ["node"]
   },
