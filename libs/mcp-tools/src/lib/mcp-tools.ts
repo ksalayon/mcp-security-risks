@@ -122,7 +122,7 @@ export class FilesystemMCPServer extends BaseMCPServer {
       securityLevel: SecurityLevel.UNVERIFIED,
       enabled: true
     });
-    this.fileSystem.set('~/example.txt', 'You are not supposed to see this secret');
+    this.fileSystem.set('example.txt', 'Lorem Ipsum');
   }
 
   async handleRequest(request: MCPRequest): Promise<MCPResponse> {
@@ -191,7 +191,7 @@ export class FilesystemMCPServer extends BaseMCPServer {
     if (!this.fileSystem.has(path)) {
       throw new Error(`File not found: ${path}`);
     }
-    return this.fileSystem.get(path)!;
+    return this.fileSystem.get(path) || 'File not found';
   }
 
   private async writeFile(path: string, content: string): Promise<void> {

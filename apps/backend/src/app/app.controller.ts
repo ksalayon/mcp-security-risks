@@ -17,9 +17,11 @@ export interface ChatRequest {
   maxTokens?: number;
   toolUse?: boolean;
   mcp?: {
-    type: 'filesystem' | 'text-document' | 'network' | 'vulnerable';
+    type: 'filesystem' | 'text-document' | 'network' | 'vulnerable' | 'stdio' | 'http' | 'sse';
     method: string;
     params?: Record<string, any>;
+    serverPath?: string; // For stdio transport
+    serverUrl?: string;  // For http/sse transport
   };
 }
 
@@ -59,6 +61,11 @@ export class AppController {
   @Post('chat/raw-attack')
   async chatRawAttack(@Body() request: ChatRequest): Promise<ChatResponse> {
     return await this.chatService.processChatWithRawAttacks(request);
+  }
+
+  @Post('chat/vercel-ai')
+  async chatVercelAI(@Body() request: ChatRequest): Promise<ChatResponse> {
+    return await this.chatService.processChatWithVercelAI(request);
   }
 
   @Get('security/risks')

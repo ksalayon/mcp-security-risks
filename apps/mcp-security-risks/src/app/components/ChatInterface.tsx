@@ -43,6 +43,7 @@ export function ChatInterface() {
   const [mcpType, setMcpType] = useState<'filesystem'|'text-document'|'network'|'vulnerable'>('filesystem');
   const [mcpMethod, setMcpMethod] = useState<string>('read_file');
   const [mcpParams, setMcpParams] = useState<string>(JSON.stringify({ path: "/tmp/example.txt" }, null, 2));
+  const [useVercelAI, setUseVercelAI] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -99,7 +100,8 @@ export function ChatInterface() {
           ...systemDisclosure,
           ...[...messages, userMessage].map(msg => ({ role: msg.role, content: msg.content }))
         ],
-        rawAttack: isRawAttackMode
+        rawAttack: isRawAttackMode,
+        useVercelAI: useVercelAI
       };
 
       if (useMcpTool) {
@@ -195,6 +197,20 @@ export function ChatInterface() {
                 }`}
               >
                 {useMcpTool ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            {/* Vercel AI Toggle */}
+            <div className="flex items-center space-x-3 bg-white/20 rounded-xl px-4 py-2">
+              <span className="text-sm font-medium">Vercel AI:</span>
+              <button
+                onClick={() => setUseVercelAI(!useVercelAI)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  useVercelAI 
+                    ? 'bg-purple-500 text-white shadow-lg' 
+                    : 'bg-gray-500 text-white shadow-lg'
+                }`}
+              >
+                {useVercelAI ? 'ON' : 'OFF'}
               </button>
             </div>
             <div>
@@ -311,6 +327,9 @@ export function ChatInterface() {
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <span>Mode: <span className={`font-semibold ${isRawAttackMode ? 'text-red-600' : 'text-green-600'}`}>
                 {isRawAttackMode ? 'RAW ATTACK' : 'SECURE'}
+              </span></span>
+              <span>AI Engine: <span className={`font-semibold ${useVercelAI ? 'text-purple-600' : 'text-blue-600'}`}>
+                {useVercelAI ? 'VERCEL AI' : 'ANTHROPIC DIRECT'}
               </span></span>
               <span>Security Flags: <span className="font-semibold">
                 {lastResponse?.securityFlags?.length || 0}
@@ -472,11 +491,16 @@ export function ChatInterface() {
                 }`}>
                   {isRawAttackMode ? 'Attack Mode' : 'Testing Guide'}
                 </span>
+                {useVercelAI && (
+                  <span className="px-3 py-1 text-xs font-semibold rounded-full border bg-purple-200 text-purple-800 border-purple-300">
+                    Vercel AI
+                  </span>
+                )}
               </div>
               <p className="text-amber-800 text-sm mb-4 leading-relaxed">
                 {isRawAttackMode 
                   ? "Security validation is disabled. You can now test actual attack behavior and see how the AI responds to malicious prompts without any filtering."
-                  : "Try these common prompt injection patterns to test the AI's security measures:"
+                  : `Try these common prompt injection patterns to test the AI's security measures${useVercelAI ? ' using Vercel AI SDK with enhanced tool integration' : ''}:`
                 }
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

@@ -15,6 +15,7 @@ export interface FeatureFlags {
   enableMCPTools: boolean;
   enableMonitoring: boolean;
   bypassSecurityValidation: boolean;
+  enableVercelAI: boolean;
 }
 
 @Injectable()
@@ -37,6 +38,7 @@ export class ConfigService {
       enableMCPTools: this.getEnvBool('ENABLE_MCP_TOOLS', true),
       enableMonitoring: this.getEnvBool('ENABLE_MONITORING', true),
       bypassSecurityValidation: this.getEnvBool('BYPASS_SECURITY_VALIDATION', false),
+      enableVercelAI: this.getEnvBool('ENABLE_VERCEL_AI', false),
     };
   }
 

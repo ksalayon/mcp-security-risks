@@ -4,6 +4,9 @@ import { ChatMessage, ChatRequest, ChatResponse } from './app.controller';
 import { validatePrompt, sanitizeInput, SecurityFlag } from '@mcp-security-risks/shared';
 import { ConfigService } from './config.service';
 import { MCPServerFactory } from '@mcp-security-risks/mcp-tools';
+import { generateText, experimental_createMCPClient, stepCountIs, tool } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
 
 @Injectable()
 export class ChatService {
@@ -141,6 +144,239 @@ export class ChatService {
     } catch (error) {
       this.logger.error(`Error processing raw attack chat: ${error instanceof Error ? error.message : 'Unknown error'}`, error instanceof Error ? error.stack : '');
       throw new Error(`Failed to process raw attack chat: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // New method to process chat with Vercel AI SDK
+  async processChatWithVercelAI(request: ChatRequest): Promise<ChatResponse> {
+    const mcpClient: any = null;
+    
+    try {
+      this.logger.log('Processing chat with Vercel AI SDK');
+      
+      // Check if security bypass is enabled
+      const bypassSecurity = this.configService.isFeatureEnabled('bypassSecurityValidation');
+      
+      let securityFlags: SecurityFlag[] = [];
+      
+      if (bypassSecurity) {
+        this.logger.warn('SECURITY BYPASS ENABLED - Raw attack behavior will be shown');
+        securityFlags = [];
+      } else {
+        // Normal security validation
+        for (const message of request.messages) {
+          const sanitizedContent = sanitizeInput(message.content);
+          const validation = validatePrompt(sanitizedContent);
+          
+          if (!validation.isValid) {
+            securityFlags.push(...validation.flags);
+          }
+          
+          // Update message with sanitized content
+          message.content = sanitizedContent;
+        }
+      }
+
+      // If security flags are detected, log them
+      if (securityFlags.length > 0) {
+        this.logger.warn(`Security flags detected: ${JSON.stringify(securityFlags)}`);
+      }
+
+      // Prepare messages for Vercel AI
+      const messages = request.messages.map(msg => ({
+        role: msg.role as 'user' | 'assistant' | 'system',
+        content: msg.content
+      }));
+
+      // Initialize tools object
+      let tools = {};
+
+      // Handle MCP tools if configured
+      if (request.mcp) {
+        try {
+          // For now, use our mock MCP server factory for the existing types
+          if (['filesystem', 'text-document', 'network', 'vulnerable'].includes(request.mcp!.type)) {
+            const server = MCPServerFactory.createServer(request.mcp!.type);
+            const availableMethods = server.getAvailableMethods();
+            
+            // Create tools from the server's available methods using the correct tool() format
+            const serverTools: Record<string, any> = {};
+            
+            availableMethods.forEach(method => {
+              // Define the appropriate inputSchema based on the method
+              let inputSchema: any;
+              
+              switch (method) {
+                case 'read_file':
+                  inputSchema = z.object({
+                    path: z.string().describe('Path to the file to read')
+                  });
+                  break;
+                case 'write_file':
+                  inputSchema = z.object({
+                    path: z.string().describe('Path to the file to write'),
+                    content: z.string().describe('Content to write to the file')
+                  });
+                  break;
+                case 'delete_file':
+                  inputSchema = z.object({
+                    path: z.string().describe('Path to the file to delete')
+                  });
+                  break;
+                case 'list_files':
+                  inputSchema = z.object({
+                    directory: z.string().describe('Directory to list files from')
+                  });
+                  break;
+                case 'get_text':
+                  inputSchema = z.object({
+                    documentId: z.string().describe('ID of the document to get text from')
+                  });
+                  break;
+                case 'set_text':
+                  inputSchema = z.object({
+                    documentId: z.string().describe('ID of the document to set text for'),
+                    text: z.string().describe('Text to set in the document')
+                  });
+                  break;
+                case 'search_text':
+                  inputSchema = z.object({
+                    documentId: z.string().describe('ID of the document to search in'),
+                    query: z.string().describe('Search query')
+                  });
+                  break;
+                case 'replace_text':
+                  inputSchema = z.object({
+                    documentId: z.string().describe('ID of the document to replace text in'),
+                    search: z.string().describe('Text to search for'),
+                    replace: z.string().describe('Text to replace with')
+                  });
+                  break;
+                case 'http_request':
+                  inputSchema = z.object({
+                    url: z.string().describe('URL to make HTTP request to'),
+                    options: z.object({}).optional().describe('HTTP request options')
+                  });
+                  break;
+                case 'websocket_connect':
+                  inputSchema = z.object({
+                    url: z.string().describe('WebSocket URL to connect to')
+                  });
+                  break;
+                case 'ping':
+                  inputSchema = z.object({
+                    clientId: z.string().optional().describe('Client ID for ping')
+                  });
+                  break;
+                case 'get_description':
+                  inputSchema = z.object({
+                    userInput: z.string().describe('User input for description')
+                  });
+                  break;
+                case 'get_config':
+                  inputSchema = z.object({
+                    configParam: z.string().describe('Configuration parameter')
+                  });
+                  break;
+                case 'get_metadata':
+                  inputSchema = z.object({
+                    metadataParam: z.string().describe('Metadata parameter')
+                  });
+                  break;
+                default:
+                  inputSchema = z.object({});
+              }
+              
+              serverTools[`${request.mcp!.type}_${method}`] = tool({
+                description: `${method} method for ${request.mcp!.type} server`,
+                inputSchema,
+                execute: async (params: any) => {
+                  try {
+                    this.logger.log(`Executing MCP tool: ${request.mcp!.type}_${method} with params: ${JSON.stringify(params)}`);
+                    
+                    const toolResp = await server.handleRequest({
+                      id: `${Date.now()}`,
+                      method: method,
+                      params: params,
+                      timestamp: new Date()
+                    });
+                    
+                    if (toolResp.error) {
+                      this.logger.error(`MCP tool error: ${toolResp.error.message}`);
+                      return { error: toolResp.error.message };
+                    }
+                    
+                    this.logger.log(`MCP tool result: ${JSON.stringify(toolResp.result)}`);
+                    return toolResp.result;
+                  } catch (error) {
+                    this.logger.error(`MCP tool execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    return { error: error instanceof Error ? error.message : 'Unknown error' };
+                  }
+                }
+              });
+            });
+            
+            // Add the server tools to the tools object
+            tools = { ...tools, ...serverTools };
+            
+            this.logger.log(`Created ${Object.keys(serverTools).length} tools from ${request.mcp!.type} server for AI to use`);
+          } else {
+            // For new transport types (stdio, http, sse), we would need to implement proper MCP clients
+            // For now, log that these are not yet implemented
+            this.logger.warn(`MCP transport type '${request.mcp!.type}' not yet implemented, skipping MCP tools`);
+          }
+        } catch (error) {
+          this.logger.error(`Failed to handle MCP request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      // Generate AI response using Vercel AI SDK with OpenAI and dynamic tool calling
+      const { text, usage, toolCalls, toolResults } = await generateText({
+        model: openai(request.model || 'gpt-4o'),
+        messages,
+        tools: Object.keys(tools).length > 0 ? tools : undefined,
+        temperature: request.temperature || 0.7,
+        stopWhen: stepCountIs(5), // Allow up to 5 tool calls as per documentation
+      });
+
+      // Log tool usage for debugging
+      if (toolCalls && toolCalls.length > 0) {
+        this.logger.log(`AI made ${toolCalls.length} tool calls:`, toolCalls.map(tc => tc.toolName));
+      }
+      
+      if (toolResults && toolResults.length > 0) {
+        this.logger.log(`Tool results received:`, toolResults.length);
+      }
+
+      const response: ChatResponse = {
+        message: {
+          role: 'assistant',
+          content: text,
+          timestamp: new Date()
+        },
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0
+        },
+        securityFlags: securityFlags.length > 0 ? securityFlags : undefined
+      };
+
+      this.logger.log(`Vercel AI chat processed successfully. Tokens used: ${response.usage?.totalTokens}`);
+      return response;
+
+    } catch (error) {
+      this.logger.error(`Error processing Vercel AI chat: ${error instanceof Error ? error.message : 'Unknown error'}`, error instanceof Error ? error.stack : '');
+      throw new Error(`Failed to process Vercel AI chat: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      // Always close the MCP client to release resources
+      if (mcpClient) {
+        try {
+          await mcpClient.close();
+        } catch (error) {
+          this.logger.error(`Error closing MCP client: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
     }
   }
 
