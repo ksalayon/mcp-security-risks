@@ -5,9 +5,9 @@
     "rootDir": "src",
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
-    "emitDeclarationOnly": true,
-  "module": "CommonJS",
-  "moduleResolution": "node",
+    "sourceMap": true,
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
     "types": ["node"]
   },

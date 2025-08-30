@@ -1,0 +1,32 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "debug.allowBreakpointsEverywhere": true,
+  "debug.console.fontSize": 12,
+  "debug.console.lineHeight": 18,
+  "debug.internalConsoleOptions": "openOnSessionStart",
+  "debug.openDebug": "openOnDebugBreak",
+  "debug.showBreakpointsInOverviewRuler": true,
+  "debug.showInlineBreakpointCandidates": true,
+  "debug.terminal.clearBeforeReusing": true,
+  "files.associations": {
+    "*.ts": "typescript"
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": false
+  },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.paths": true,
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "nxConsole.generateAiAgentRules": true
+}
+

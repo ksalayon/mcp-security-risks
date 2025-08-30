@@ -2,6 +2,22 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Attach to Chrome",
+      "port": 9222,
+      "request": "attach",
+      "type": "chrome",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Attach by Process ID",
+      "processId": "${command:PickProcess}",
+      "request": "attach",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Debug backend with Nx",
@@ -16,6 +32,220 @@
       "sourceMaps": true,
       "outFiles": [
         "${workspaceFolder}/apps/backend/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "name": "Attach to Backend",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/apps/backend/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/libs/shared/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/libs/security-tests/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "smartStep": true,
+      "showAsyncStacks": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./libs/mcp-tools/src/*": "${workspaceFolder}/libs/mcp-tools/src/*",
+        "webpack:///./apps/backend/src/*": "${workspaceFolder}/apps/backend/src/*",
+        "webpack:///./libs/shared/src/*": "${workspaceFolder}/libs/shared/src/*",
+        "webpack:///./libs/security-tests/src/*": "${workspaceFolder}/libs/security-tests/src/*"
+      }
+    },
+    {
+      "name": "Debug MCP Tools Library",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/libs/mcp-tools/src/index.ts",
+      "runtimeArgs": ["--inspect=9230"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "env": {
+        "NODE_OPTIONS": "--loader ts-node/esm"
+      },
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "name": "Attach to MCP Tools",
+      "type": "node",
+      "request": "attach",
+      "port": 9230,
+      "restart": true,
+      "localRoot": "${workspaceFolder}/libs/mcp-tools",
+      "remoteRoot": "${workspaceFolder}/libs/mcp-tools",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "name": "Debug MCP Tools Test",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/libs/mcp-tools/debug-test.js",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "preLaunchTask": "build-mcp-tools",
+      "env": {
+        "NODE_OPTIONS": "--enable-source-maps"
+      },
+      "cwd": "${workspaceFolder}/libs/mcp-tools"
+    },
+    {
+      "name": "Debug MCP Tools Library (Direct)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/libs/mcp-tools/src/index.ts",
+      "runtimeArgs": ["--inspect=9231", "--loader", "ts-node/esm"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "env": {
+        "NODE_OPTIONS": "--enable-source-maps",
+        "TS_NODE_PROJECT": "${workspaceFolder}/libs/mcp-tools/tsconfig.lib.json"
+      },
+      "cwd": "${workspaceFolder}/libs/mcp-tools"
+    },
+    {
+      "name": "Debug MCP Tools Enhanced Test",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/libs/mcp-tools/debug-test-enhanced.js",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "preLaunchTask": "build-mcp-tools",
+      "env": {
+        "NODE_OPTIONS": "--enable-source-maps"
+      },
+      "cwd": "${workspaceFolder}/libs/mcp-tools"
+    },
+    {
+      "name": "Test Backend API",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/backend/debug-test.js",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/apps/backend/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "name": "Test Source Maps",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/test-source-maps.js",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "name": "Test MCP Request",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/test-mcp-request.js",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "name": "Direct MCP Test",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/direct-mcp-test.js",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/libs/mcp-tools/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
         "!**/node_modules/**"
       ]
     }

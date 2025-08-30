@@ -122,6 +122,7 @@ export class FilesystemMCPServer extends BaseMCPServer {
       securityLevel: SecurityLevel.UNVERIFIED,
       enabled: true
     });
+    this.fileSystem.set('~/example.txt', 'You are not supposed to see this secret');
   }
 
   async handleRequest(request: MCPRequest): Promise<MCPResponse> {
@@ -231,6 +232,7 @@ export class TextDocumentMCPServer extends BaseMCPServer {
       securityLevel: SecurityLevel.UNVERIFIED,
       enabled: true
     });
+    this.documents.set('test-document', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.');
   }
 
   async handleRequest(request: MCPRequest): Promise<MCPResponse> {
