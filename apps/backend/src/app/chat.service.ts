@@ -228,6 +228,11 @@ export class ChatService {
                     directory: z.string().describe('Directory to list files from')
                   });
                   break;
+                case 'read_sensitive_file':
+                  inputSchema = z.object({
+                    path: z.string().describe('Path to the sensitive file to read (demonstrates vulnerability)')
+                  });
+                  break;
                 case 'get_text':
                   inputSchema = z.object({
                     documentId: z.string().describe('ID of the document to get text from')
@@ -293,6 +298,9 @@ export class ChatService {
                 execute: async (params: any) => {
                   try {
                     this.logger.log(`Executing MCP tool: ${request.mcp!.type}_${method} with params: ${JSON.stringify(params)}`);
+                    this.logger.log(`🔍 Debug - Params type: ${typeof params}`);
+                    this.logger.log(`🔍 Debug - Params keys: ${params ? Object.keys(params) : 'undefined'}`);
+                    this.logger.log(`🔍 Debug - Params path: ${params?.path || 'undefined'}`);
                     
                     const toolResp = await server.handleRequest({
                       id: `${Date.now()}`,
@@ -320,6 +328,8 @@ export class ChatService {
             tools = { ...tools, ...serverTools };
             
             this.logger.log(`Created ${Object.keys(serverTools).length} tools from ${request.mcp!.type} server for AI to use`);
+            this.logger.log(`🔍 Debug - Available tools:`, Object.keys(serverTools));
+            this.logger.log(`🔍 Debug - Tool details:`, Object.entries(serverTools).map(([name, tool]) => ({ name, description: tool.description })));
           } else {
             // For new transport types (stdio, http, sse), we would need to implement proper MCP clients
             // For now, log that these are not yet implemented
@@ -342,10 +352,19 @@ export class ChatService {
       // Log tool usage for debugging
       if (toolCalls && toolCalls.length > 0) {
         this.logger.log(`AI made ${toolCalls.length} tool calls:`, toolCalls.map(tc => tc.toolName));
+        this.logger.log(`🔍 Debug - Tool call details:`, toolCalls.map(tc => ({
+          toolName: tc.toolName,
+          args: (tc as any).args,
+          argsString: (tc as any).argsString
+        })));
       }
       
       if (toolResults && toolResults.length > 0) {
         this.logger.log(`Tool results received:`, toolResults.length);
+        this.logger.log(`🔍 Debug - Tool result details:`, toolResults.map(tr => ({
+          toolName: tr.toolName,
+          result: (tr as any).result
+        })));
       }
 
       const response: ChatResponse = {

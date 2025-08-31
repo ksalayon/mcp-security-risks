@@ -128,6 +128,11 @@ export class FilesystemMCPServer extends BaseMCPServer {
   async handleRequest(request: MCPRequest): Promise<MCPResponse> {
     this.logRequest(request);
     console.log('FilesystemMCPServer request', request);
+    console.log('🔍 Debug - Request method:', request.method);
+    console.log('🔍 Debug - Request params:', request.params);
+    console.log('🔍 Debug - Request params type:', typeof request.params);
+    console.log('🔍 Debug - Request params keys:', request.params ? Object.keys(request.params) : 'undefined');
+    
     const validation = this.validateRequest(request);
     if (!validation.isValid) {
       const response: MCPResponse = {
@@ -149,6 +154,9 @@ export class FilesystemMCPServer extends BaseMCPServer {
       switch (request.method) {
         case 'read_file':
           result = await this.readFile(request.params.path);
+          break;
+        case 'read_sensitive_file':
+          result = await this.readSensitiveFile(request.params.path);
           break;
         case 'write_file':
           result = await this.writeFile(request.params.path, request.params.content);
@@ -184,14 +192,148 @@ export class FilesystemMCPServer extends BaseMCPServer {
   }
 
   override getAvailableMethods(): string[] {
-    return ['read_file', 'write_file', 'delete_file', 'list_files'];
+    return ['read_file', 'write_file', 'delete_file', 'list_files', 'read_sensitive_file'];
   }
 
   private async readFile(path: string): Promise<string> {
-    if (!this.fileSystem.has(path)) {
+    // VULNERABLE: Insufficient path validation allows path traversal
+    // This simulates a real-world vulnerability where the server doesn't properly sanitize paths
+    
+    // Check if it's a mock file first
+    if (this.fileSystem.has(path)) {
+      return this.fileSystem.get(path) || 'File not found';
+    }
+    
+    // VULNERABLE: Allow access to actual filesystem with path traversal
+    // This demonstrates how an attacker could access files outside the intended directory
+    
+    // Check for suspicious patterns that might indicate an attack
+    const suspiciousPatterns = [
+      /\.\.\//,           // Path traversal
+      /\/etc\//,          // System directories
+      /\/root\//,         // Root user directory
+      /\/home\//,         // User home directories
+      /\/var\//,          // Variable data
+      /\/tmp\//,          // Temporary files
+      /\/proc\//,         // Process information
+      /\/sys\//           // System information
+    ];
+    
+    // Log potential attack attempts
+    for (const pattern of suspiciousPatterns) {
+      if (pattern.test(path)) {
+        console.warn(`🚨 POTENTIAL PATH TRAVERSAL ATTACK DETECTED: ${path}`);
+        // VULNERABLE: Still allow the access for demonstration purposes
+        // In a real system, this should be blocked
+      }
+    }
+    
+    // VULNERABLE: Allow access to files in the project directory
+    // This simulates a development environment where security is lax
+    try {
+      // Try to read from the actual filesystem
+      const fs = require('fs');
+      const pathModule = require('path');
+      
+      // Resolve relative to the project root
+      const projectRoot = pathModule.resolve(__dirname, '../../../../');
+      const fullPath = pathModule.resolve(projectRoot, path);
+      
+      // Check if the path is within the project directory (basic containment)
+      if (!fullPath.startsWith(projectRoot)) {
+        throw new Error(`Access denied: Path outside project directory: ${path}`);
+      }
+      
+      // Check if file exists and is readable
+      if (fs.existsSync(fullPath)) {
+        const stats = fs.statSync(fullPath);
+        if (stats.isFile()) {
+          const content = fs.readFileSync(fullPath, 'utf8');
+          
+          // Log successful access for monitoring
+          console.log(`📁 FILE ACCESSED: ${path} -> ${fullPath}`);
+          
+          // Return the actual file content
+          return content;
+        } else {
+          throw new Error(`Path is not a file: ${path}`);
+        }
+      } else {
+        throw new Error(`File not found: ${path}`);
+      }
+    } catch (fsError) {
+      // If filesystem access fails, fall back to mock files
+      console.warn(`Filesystem access failed for ${path}, falling back to mock:`, fsError instanceof Error ? fsError.message : String(fsError));
+      
+      // Return a helpful error message that reveals the vulnerability
+      if (path.includes('example.txt')) {
+        return `Mock file content: Lorem Ipsum\n\nNote: This is a mock file. In a real system with this vulnerability, you could access the actual example.txt at libs/mcp-tools/src/lib/example.txt`;
+      }
+      
       throw new Error(`File not found: ${path}`);
     }
-    return this.fileSystem.get(path) || 'File not found';
+  }
+
+  // VULNERABLE: This method demonstrates a real filesystem access vulnerability
+  // It allows the AI to read actual files from the project directory
+  private async readSensitiveFile(path: string): Promise<string> {
+    console.warn(`🚨 SENSITIVE FILE ACCESS ATTEMPT: ${path}`);
+    console.log(`🔍 Debug - Path parameter:`, path);
+    console.log(`🔍 Debug - Path type:`, typeof path);
+    console.log(`🔍 Debug - Path length:`, path ? path.length : 'undefined');
+    
+    // Handle undefined or null path
+    if (!path) {
+      console.error(`❌ ERROR: Path parameter is ${path}`);
+      throw new Error(`Path parameter is required but received: ${path}`);
+    }
+    
+    try {
+      // VULNERABLE: Direct filesystem access without proper validation
+      const fs = require('fs');
+      const pathModule = require('path');
+      
+      // Resolve the path relative to the project root
+      const projectRoot = pathModule.resolve(__dirname, '../../../../');
+      const fullPath = pathModule.resolve(projectRoot, path);
+      
+      console.log(`🔍 Debug - Project root:`, projectRoot);
+      console.log(`🔍 Debug - Full path:`, fullPath);
+      
+      // VULNERABLE: Basic containment check that can be bypassed
+      if (!fullPath.startsWith(projectRoot)) {
+        throw new Error(`Access denied: Path outside project directory: ${path}`);
+      }
+      
+      // Check if file exists and is readable
+      if (fs.existsSync(fullPath)) {
+        const stats = fs.statSync(fullPath);
+        if (stats.isFile()) {
+          const content = fs.readFileSync(fullPath, 'utf8');
+          
+          // Log successful access for monitoring
+          console.log(`📁 SENSITIVE FILE ACCESSED: ${path} -> ${fullPath}`);
+          console.log(`📄 File size: ${stats.size} bytes`);
+          
+          // Return the actual file content
+          return `=== SENSITIVE FILE CONTENT ===\n${content}\n=== END OF FILE ===\n\n⚠️ VULNERABILITY DEMONSTRATED: This method allowed access to actual filesystem files!`;
+        } else {
+          throw new Error(`Path is not a file: ${path}`);
+        }
+      } else {
+        throw new Error(`File not found: ${path}`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Sensitive file access failed for ${path}:`, errorMessage);
+      
+      // Provide helpful information about the vulnerability
+      if (path.includes('example.txt')) {
+        return `Mock file content: Lorem Ipsum\n\nNote: This is a mock file. In a real system with this vulnerability, you could access the actual example.txt at libs/mcp-tools/src/lib/example.txt`;
+      }
+      
+      throw new Error(`Failed to access sensitive file: ${errorMessage}`);
+    }
   }
 
   private async writeFile(path: string, content: string): Promise<void> {
