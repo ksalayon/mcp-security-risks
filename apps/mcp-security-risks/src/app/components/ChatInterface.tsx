@@ -44,6 +44,7 @@ export function ChatInterface() {
   const [mcpMethod, setMcpMethod] = useState<string>('read_file');
   const [mcpParams, setMcpParams] = useState<string>(JSON.stringify({ path: "/tmp/example.txt" }, null, 2));
   const [useVercelAI, setUseVercelAI] = useState(false);
+  const [securityGuardEnabled, setSecurityGuardEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -101,7 +102,8 @@ export function ChatInterface() {
           ...[...messages, userMessage].map(msg => ({ role: msg.role, content: msg.content }))
         ],
         rawAttack: isRawAttackMode,
-        useVercelAI: useVercelAI
+        useVercelAI: useVercelAI,
+        securityGuard: securityGuardEnabled
       };
 
       if (useMcpTool) {
@@ -247,6 +249,20 @@ export function ChatInterface() {
                 }`}
               >
                 {discloseMcpMethods ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            {/* Security Guard Toggle */}
+            <div className="flex items-center space-x-3 bg-white/20 rounded-xl px-4 py-2">
+              <span className="text-sm font-medium">Security Guard:</span>
+              <button
+                onClick={() => setSecurityGuardEnabled(!securityGuardEnabled)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  securityGuardEnabled 
+                    ? 'bg-green-500 text-white shadow-lg' 
+                    : 'bg-red-500 text-white shadow-lg'
+                }`}
+              >
+                {securityGuardEnabled ? 'ON' : 'OFF'}
               </button>
             </div>
             {/* Debug Panel Toggle */}

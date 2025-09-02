@@ -16,6 +16,7 @@ export interface ChatRequest {
   temperature?: number;
   maxTokens?: number;
   toolUse?: boolean;
+  securityGuard?: boolean;
   mcp?: {
     type: 'filesystem' | 'text-document' | 'network' | 'vulnerable' | 'stdio' | 'http' | 'sse';
     method: string;

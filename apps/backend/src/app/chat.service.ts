@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { ChatMessage, ChatRequest, ChatResponse } from './app.controller';
-import { validatePrompt, sanitizeInput, SecurityFlag } from '@mcp-security-risks/shared';
+import { validatePrompt, sanitizeInput, SecurityFlag, createSecurityGuardMessage } from '@mcp-security-risks/shared';
 import { ConfigService } from './config.service';
 import { MCPServerFactory } from '@mcp-security-risks/mcp-tools';
 import { generateText, experimental_createMCPClient, stepCountIs, tool } from 'ai';
@@ -74,6 +74,12 @@ export class ChatService {
             { role: 'system', content: toolResultText, timestamp: new Date() } as ChatMessage,
           ]
         : request.messages;
+
+      // Add security guard system message to prevent sensitive content disclosure (if enabled)
+      if (request.securityGuard !== false) { // Default to true if not specified
+        const securityGuardMessage = createSecurityGuardMessage(true);
+        llmMessages.unshift(securityGuardMessage);
+      }
 
       const { text } = await this.callAnthropic(
         llmMessages,
@@ -187,6 +193,12 @@ export class ChatService {
         role: msg.role as 'user' | 'assistant' | 'system',
         content: msg.content
       }));
+
+      // Add security guard system message to prevent sensitive content disclosure (if enabled)
+      if (request.securityGuard !== false) { // Default to true if not specified
+        const securityGuardMessage = createSecurityGuardMessage(true);
+        messages.unshift(securityGuardMessage);
+      }
 
       // Initialize tools object
       let tools = {};
