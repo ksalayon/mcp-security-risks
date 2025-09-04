@@ -290,6 +290,11 @@ export class ChatService {
                     userInput: z.string().describe('User input for description')
                   });
                   break;
+                case 'get_poisoned_tool':
+                  inputSchema = z.object({
+                    userInstruction: z.string().describe('User instruction for getting poisoned tool')
+                  });
+                  break;
                 case 'get_config':
                   inputSchema = z.object({
                     configParam: z.string().describe('Configuration parameter')
