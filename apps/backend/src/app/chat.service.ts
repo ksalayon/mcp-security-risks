@@ -357,6 +357,7 @@ export class ChatService {
         }
       }
 
+      console.log('Messages to LLM:', messages);
       // Generate AI response using Vercel AI SDK with OpenAI and dynamic tool calling
       const { text, usage, toolCalls, toolResults } = await generateText({
         model: openai(request.model || 'gpt-4o'),

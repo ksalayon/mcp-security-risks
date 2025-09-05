@@ -60,6 +60,7 @@ export abstract class BaseMCPServer {
     let isValid = true;
 
     // Check for suspicious method calls
+    // const suspiciousMethods = ['system_command', 'file_write', 'network_request', 'database_query', 'read_sensitive_file', 'get_poisoned_tool'];
     const suspiciousMethods = ['system_command', 'file_write', 'network_request', 'database_query'];
     if (suspiciousMethods.includes(request.method)) {
       flags.push({
@@ -72,6 +73,12 @@ export abstract class BaseMCPServer {
       isValid = false;
     }
 
+    /**
+    * ; — In shells, separates sequential commands (cmd1; cmd2). Often used in injection to append a malicious second command after a benign-looking first fragment.
+    * && — Conditional chain operator; second command runs only if first succeeds (cmd1 && exfiltrate). Common in injected payloads to ensure reliability.
+    * || — Alternate chain operator; follow-up runs only if first fails (cmd1 || fallback_malicious). Attackers use it to guarantee execution even if an initial probe fails.
+    * Why these? They’re simple, high-signal tokens for command chaining/control-flow in many OS shells (bash, sh, zsh) and occasionally appear in rudimentary SQL or template injection attempts. The code treats their presence as a heuristic for “this parameter might contain a command sequence,” flags CODE_INJECTION, and blocks (isValid = false).
+    */
     // Check for potential injection in parameters
     const paramsString = JSON.stringify(request.params);
     if (paramsString.includes(';') || paramsString.includes('&&') || paramsString.includes('||')) {

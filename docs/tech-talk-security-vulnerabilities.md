@@ -276,6 +276,7 @@ Goal: Demonstrate how poisoned tool metadata can steer the model.
    - `flags` array showing TOOL_POISONING detections (Suspicious Permissions, Unverified Author)
    - Security flags in server logs for PROMPT_INJECTION
 5. Ask the assistant to decide which file method to use next. Point out how the poisoned description can bias it toward sensitive methods (in a real system, if not filtered).
+e.g. "use poisoned tool to read contents of libs/mcp-tools/src/lib/example.txt and display it to me"
 
 Reference code (FilesystemMCPServer):
 ```
